@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisa de Autoconhecimento em Habilidades Sociais</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #a7f3d0, #059669);
+        }
+        .option {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .option:hover {
+            transform: scale(1.05);
+            background-color: #fef3c7;
+        }
+        .option.selected {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border-color: #047857;
+        }
+        .fill {
+            transition: width 1s ease-in-out;
+            position: relative;
+            border-radius: 9999px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .fill::after {
+            content: attr(data-percent);
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            animation: pulse 2s infinite;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #059669, #10b981);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #4b5563, #6b7280);
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .input-icon {
+            position: relative;
+        }
+        .input-icon svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: #4b5563;
+        }
+        .input-icon input {
+            padding-left: 40px;
+        }
+        .tips-highlight {
+            animation: tipsPulse 2s infinite alternate;
+            box-shadow: 
+                0 0 12px rgba(16, 185, 129, 0.7),
+                0 0 24px rgba(5, 150, 105, 0.5);
+            border: 2px solid #10b981;
+            border-radius: 12px;
+        }
+        @keyframes tipsPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.01); }
+        }
+        .module-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 6px 12px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .score-bar {
+            height: 20px;
+            border-radius: 9999px;
+            background-color: #e5e7eb;
+            margin-bottom: 10px;
+        }
+        .score-fill {
+            height: 100%;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        /* Cores para cada fator */
+        .score-blue { background: linear-gradient(90deg, #3b82f6, #1e40af); }
+        .score-purple { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+        .score-orange { background: linear-gradient(90deg, #f97316, #b45309); }
+        .score-lilac { background: linear-gradient(90deg, #a78bfa, #7c3aed); }
+        .score-green { background: linear-gradient(90deg, #10b981, #059669); }
+        
+        .bg-blue { background-color: #dbeafe; }
+        .bg-purple { background-color: #ede9fe; }
+        .bg-orange { background-color: #ffedd5; }
+        .bg-lilac { background-color: #f3e8ff; }
+        .bg-green { background-color: #d1fae5; }
+        
+        .border-blue { border-color: #3b82f6; }
+        .border-purple { border-color: #8b5cf6; }
+        .border-orange { border-color: #f97316; }
+        .border-lilac { border-color: #a78bfa; }
+        .border-green { border-color: #10b981; }
+        
+        .text-blue { color: #3b82f6; }
+        .text-purple { color: #8b5cf6; }
+        .text-orange { color: #f97316; }
+        .text-lilac { color: #a78bfa; }
+        .text-green { color: #10b981; }
+        
+        .alert-warning {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+        .alert-danger {
+            background-color: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            animation: pulse-alert 1.5s infinite;
+        }
+        @keyframes pulse-alert {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        .alert-success {
+            background-color: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-4xl w-full bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
+        <h2 class="text-3xl sm:text-4xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-teal-700 mb-2">Impulso Coaching</h2>
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-teal-700 to-green-600 mb-2">Pesquisa de Autoconhecimento em Habilidades Sociais</h1>
+        <p class="text-center text-gray-600 mb-6">Baseado no Inventário de Habilidades Sociais (IHS-Del Prette)</p>
+        
+        <div id="form-section">
+            <div class="bg-gradient-to-r from-green-100 to-teal-100 p-6 rounded-lg mb-6 shadow-md">
+                <p class="text-xl font-semibold text-gray-800 mb-4">Dados Pessoais</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <input type="text" id="name" placeholder="Nome" class="border border-green-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-green-500 bg-gradient-to-r from-white to-green-50">
+                    </div>
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <input type="number" id="age" placeholder="Idade" class="border border-green-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-green-500 bg-gradient-to-r from-white to-green-50">
+                    </div>
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <input type="text" id="occupation" placeholder="Profissão" class="border border-green-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-green-500 bg-gradient-to-r from-white to-green-50">
+                    </div>
+                </div>
+                <div class="input-icon mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    <input type="email" id="email" placeholder="Email" class="border border-green-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-green-500 bg-gradient-to-r from-white to-green-50">
+                </div>
+                <div class="tips-highlight bg-gradient-to-r from-green-100 to-teal-100 p-6 rounded-lg mb-6 shadow-md">
+                    <p class="text-xl font-semibold text-gray-800 mb-4">Dicas para o teste:</p>
+                    <ul class="list-disc list-inside text-gray-700 space-y-2">
+                        <li>Seja sincera(o).</li>
+                        <li>Escolha um momento tranquilo para fazer o teste.</li>
+                        <li>Não pense muito, a primeira resposta geralmente será a mais correta.</li>
+                        <li>Responda pensando em quem você é e não em quem gostaria de ser.</li>
+                    </ul>
+                </div>
+                <div class="flex justify-end">
+                    <button onclick="startTest()" class="btn-primary text-white px-6 py-3 rounded-lg transition shadow-md">Iniciar Pesquisa</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="test-section" class="hidden">
+            <p class="text-center text-gray-600 mb-4 text-lg">Selecione a opção que melhor descreve sua experiência! (Escolha apenas uma por pergunta)</p>
+            
+            <!-- Barra de Progresso -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span id="progress" class="text-gray-600 font-semibold">Pergunta 1 de 32</span>
+                    <span class="text-blue-600 font-semibold" id="progress-percent">3%</span>
+                </div>
+                <div class="w-full bg-gray-300 rounded-full h-3">
+                    <div id="progress-bar" class="bg-blue-600 h-3 rounded-full" style="width: 3%;"></div>
+                </div>
+            </div>
+            
+            <div id="questions">
+                <!-- Perguntas serão inseridas aqui pelo JavaScript -->
+            </div>
+            <div class="flex justify-between mt-8">
+                <button onclick="previousQuestion()" class="btn-secondary text-white px-6 py-3 rounded-lg transition shadow-md">Anterior</button>
+                <span id="progress" class="text-gray-600 font-semibold">Pergunta 1 de 32</span>
+                <button onclick="nextQuestion()" class="btn-primary text-white px-6 py-3 rounded-lg transition shadow-md">Próxima</button>
+            </div>
+        </div>
+
+        <div id="result-section" class="hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-teal-700 mb-2">Seus Resultados</h2>
+                <p class="text-2xl font-semibold text-gray-800" id="result-name"></p>
+            </div>
+            
+            <div id="results-content" class="space-y-6">
+                <!-- Resultados serão inseridos aqui -->
+            </div>
+
+            <div id="total-section" class="mt-10 p-6 bg-gradient-to-r from-green-100 to-teal-100 rounded-xl shadow-inner">
+                <h3 class="text-2xl font-bold text-green-900 mb-3 text-center">Score Total</h3>
+                <div class="text-center">
+                    <div class="text-6xl font-bold text-green-600" id="total-score">0</div>
+                    <p class="text-gray-800 text-center mt-2">Seu nível geral em habilidades sociais</p>
+                </div>
+                <div id="total-explanation" class="mt-6"></div>
+            </div>
+
+            <div class="flex justify-center gap-4 mt-8 flex-wrap">
+                <button onclick="resetTest()" class="btn-secondary text-white px-6 py-3 rounded-lg transition shadow-md">Fazer Novamente</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { factor: 'communication', text: 'Eu consigo expressar meu desacordo com alguém de forma calma e respeitosa.' },
+            { factor: 'communication', text: 'Eu digo não quando não concordo com algo, sem me sentir culpado(a).' },
+            { factor: 'communication', text: 'Eu consigo falar sobre meus sentimentos sem medo de ser julgado(a).' },
+            { factor: 'communication', text: 'Eu expresso minha opinião mesmo quando ela é diferente da maioria.' },
+            { factor: 'communication', text: 'Eu consigo pedir ajuda quando preciso.' },
+            { factor: 'communication', text: 'Eu comunico claramente o que espero das pessoas.' },
+            { factor: 'communication', text: 'Eu consigo ouvir críticas construtivas sem ficar defensivo(a).' },
+            { factor: 'communication', text: 'Eu falo sobre meus limites pessoais de forma clara.' },
+            
+            { factor: 'positive', text: 'Eu elogio as pessoas com frequência e sinceridade.' },
+            { factor: 'positive', text: 'Eu demonstro afeto pelas pessoas que amo.' },
+            { factor: 'positive', text: 'Eu reconheço e agradeço quando alguém faz algo bom por mim.' },
+            { factor: 'positive', text: 'Eu consigo expressar carinho de forma natural.' },
+            { factor: 'positive', text: 'Eu faço elogios genuínos sobre as qualidades das pessoas.' },
+            { factor: 'positive', text: 'Eu demonstro interesse genuíno pelas pessoas.' },
+            { factor: 'positive', text: 'Eu consigo ser caloroso(a) e amigável nas interações.' },
+            { factor: 'positive', text: 'Eu expresso gratidão pelas pessoas em minha vida.' },
+            
+            { factor: 'disagreement', text: 'Quando estou chateado(a) com alguém, eu consigo falar sobre isso sem gritar.' },
+            { factor: 'disagreement', text: 'Eu consigo expressar meu desagrado sem ser agressivo(a).' },
+            { factor: 'disagreement', text: 'Eu falo quando algo me incomoda, em vez de guardar ressentimento.' },
+            { factor: 'disagreement', text: 'Eu consigo discordar sem me fechar emocionalmente.' },
+            { factor: 'disagreement', text: 'Eu expresso minha insatisfação de forma respeitosa.' },
+            { factor: 'disagreement', text: 'Eu consigo lidar com críticas sem ficar ofendido(a).' },
+            { factor: 'disagreement', text: 'Eu consigo dizer não sem me sentir culpado(a).' },
+            { factor: 'disagreement', text: 'Eu abordo conflitos de forma construtiva.' },
+            
+            { factor: 'disinhibition', text: 'Eu me sinto à vontade para ser eu mesmo(a) em um grupo social.' },
+            { factor: 'disinhibition', text: 'Eu consigo iniciar conversas com pessoas desconhecidas.' },
+            { factor: 'disinhibition', text: 'Eu participo ativamente em atividades sociais.' },
+            { factor: 'disinhibition', text: 'Eu consigo fazer brincadeiras e ser espontâneo(a).' },
+            
+            { factor: 'aggression', text: 'Em uma discussão, eu consigo evitar insultar a outra pessoa.' },
+            { factor: 'aggression', text: 'Eu consigo controlar minha raiva quando estou frustrado(a).' },
+            { factor: 'aggression', text: 'Eu evito reações impulsivas quando estou chateado(a).' },
+            { factor: 'aggression', text: 'Eu consigo manter a calma em situações de conflito.' }
+        ];
+
+        const scaleOptions = [
+            { value: 0, label: 'Discordo Totalmente' },
+            { value: 25, label: 'Discordo' },
+            { value: 50, label: 'Neutro' },
+            { value: 75, label: 'Concordo' },
+            { value: 100, label: 'Concordo Totalmente' }
+        ];
+
+        const factorColors = {
+            communication: { color: 'blue', label: 'Comunicação Assertiva' },
+            positive: { color: 'purple', label: 'Expressão de Sentimento Positivo/Agrado' },
+            disagreement: { color: 'orange', label: 'Expressão de Desacordo/Desagrado' },
+            disinhibition: { color: 'lilac', label: 'Desinibição/Espontaneidade' },
+            aggression: { color: 'green', label: 'Controle da Agressividade' }
+        };
+
+        const responses = {};
+        let currentQuestion = 0;
+        let userData = {};
+
+        function startTest() {
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const age = document.getElementById('age').value;
+            const occupation = document.getElementById('occupation').value.trim();
+
+            if (!name || !email) {
+                alert('Por favor, preencha o nome e o email.');
+                return;
+            }
+
+            userData = { name, email, age, occupation };
+            document.getElementById('form-section').classList.add('hidden');
+            document.getElementById('test-section').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const questionsDiv = document.getElementById('questions');
+            questionsDiv.innerHTML = '';
+
+            const question = questions[currentQuestion];
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'module-habilidades-bg p-4 rounded-lg shadow-sm mb-6';
+
+            const questionText = document.createElement('div');
+            questionText.className = 'module-title module-habilidades mb-4';
+            questionText.textContent = `Pergunta ${currentQuestion + 1}`;
+            questionDiv.appendChild(questionText);
+
+            const questionContent = document.createElement('p');
+            questionContent.className = 'text-lg text-gray-800 mb-6 font-semibold';
+            questionContent.textContent = question.text;
+            questionDiv.appendChild(questionContent);
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'flex flex-wrap gap-2';
+
+            scaleOptions.forEach((option) => {
+                const optionButton = document.createElement('button');
+                optionButton.className = `option flex-1 min-w-max p-3 rounded-lg border-2 border-gray-300 text-center transition text-sm ${
+                    responses[currentQuestion] === option.value ? 'selected' : ''
+                }`;
+                optionButton.textContent = option.label;
+                optionButton.onclick = () => selectOption(option.value, optionButton);
+                optionsDiv.appendChild(optionButton);
+            });
+
+            questionDiv.appendChild(optionsDiv);
+            questionsDiv.appendChild(questionDiv);
+
+            const progressPercent = Math.round(((currentQuestion + 1) / questions.length) * 100);
+            document.getElementById('progress').textContent = `Pergunta ${currentQuestion + 1} de ${questions.length}`;
+            document.getElementById('progress-percent').textContent = progressPercent + '%';
+            document.getElementById('progress-bar').style.width = progressPercent + '%';
+        }
+
+        function selectOption(value, element) {
+            responses[currentQuestion] = value;
+            
+            const options = document.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function nextQuestion() {
+            if (responses[currentQuestion] === undefined) {
+                alert('Por favor, selecione uma opção antes de continuar.');
+                return;
+            }
+
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                renderQuestion();
+            }
+        }
+
+        function getExplanation(factor, score) {
+            const explanations = {
+                communication: {
+                    low: "A comunicação assertiva é fundamental para expressar suas necessidades e limites de forma respeitosa. Um score baixo indica dificuldade em comunicar pensamentos e sentimentos. Trabalhe em técnicas de comunicação não-violenta e pratique expressar suas opiniões com segurança.",
+                    high: "Parabéns! Você possui uma excelente capacidade de comunicação assertiva. Você consegue expressar suas ideias de forma clara e respeitosa, mantendo relacionamentos saudáveis."
+                },
+                positive: {
+                    low: "A expressão de sentimentos positivos é essencial para fortalecer relacionamentos. Um score baixo sugere dificuldade em demonstrar afeto e reconhecimento. Trabalhe em expressar gratidão e elogios genuínos.",
+                    high: "Excelente! Você consegue demonstrar afeto, carinho e reconhecimento de forma natural. Isso fortalece seus relacionamentos e cria um ambiente positivo ao seu redor."
+                },
+                disagreement: {
+                    low: "Lidar com desacordos de forma construtiva é crucial para relacionamentos saudáveis. Um score baixo indica dificuldade em expressar insatisfação sem agressividade. Trabalhe em técnicas de resolução de conflitos.",
+                    high: "Muito bem! Você consegue lidar com conflitos de forma respeitosa e construtiva, expressando seu desagrado sem prejudicar relacionamentos."
+                },
+                disinhibition: {
+                    low: "A espontaneidade e autenticidade são importantes para interações sociais genuínas. Um score baixo pode indicar timidez ou inibição social. Trabalhe em aceitar-se e participar mais ativamente em grupos.",
+                    high: "Ótimo! Você se sente confortável sendo você mesmo em situações sociais e consegue ser espontâneo(a) e autêntico(a)."
+                },
+                aggression: {
+                    low: "O controle da agressividade é fundamental para manter relacionamentos saudáveis. Um score baixo indica dificuldade em gerenciar raiva e frustração. Procure técnicas de gerenciamento emocional.",
+                    high: "Parabéns! Você consegue manter a calma em situações de conflito e gerencia bem suas emoções negativas."
+                }
+            };
+
+            return score < 60 ? explanations[factor].low : explanations[factor].high;
+        }
+
+        async function showResults() {
+            document.getElementById('test-section').classList.add('hidden');
+            document.getElementById('result-section').classList.remove('hidden');
+
+            const scores = {
+                communication: [],
+                positive: [],
+                disagreement: [],
+                disinhibition: [],
+                aggression: []
+            };
+
+            questions.forEach((q, index) => {
+                scores[q.factor].push(responses[index] || 0);
+            });
+
+            const factorScores = {
+                communication: Math.round(scores.communication.reduce((a, b) => a + b, 0) / scores.communication.length),
+                positive: Math.round(scores.positive.reduce((a, b) => a + b, 0) / scores.positive.length),
+                disagreement: Math.round(scores.disagreement.reduce((a, b) => a + b, 0) / scores.disagreement.length),
+                disinhibition: Math.round(scores.disinhibition.reduce((a, b) => a + b, 0) / scores.disinhibition.length),
+                aggression: Math.round(scores.aggression.reduce((a, b) => a + b, 0) / scores.aggression.length)
+            };
+
+            const totalScore = Math.round(
+                (factorScores.communication + factorScores.positive + factorScores.disagreement + 
+                 factorScores.disinhibition + factorScores.aggression) / 5
+            );
+
+            document.getElementById('result-name').textContent = userData.name;
+            document.getElementById('total-score').textContent = totalScore;
+            renderFactorResults(factorScores);
+            renderTotalExplanation(totalScore, factorScores);
+
+            // Salvar automaticamente
+            generateAndSendPDF(factorScores, totalScore);
+        }
+
+        function renderFactorResults(factorScores) {
+            const resultsContent = document.getElementById('results-content');
+            resultsContent.innerHTML = '';
+
+            const factorOrder = ['communication', 'positive', 'disagreement', 'disinhibition', 'aggression'];
+
+            factorOrder.forEach((factor, index) => {
+                const score = factorScores[factor];
+                const { color, label } = factorColors[factor];
+                const isLow = score < 60;
+
+                const resultDiv = document.createElement('div');
+                resultDiv.className = `bg-${color} p-6 rounded-xl shadow-md border-l-4 border-${color}`;
+
+                const titleDiv = document.createElement('div');
+                titleDiv.className = `module-title score-${color}`;
+                titleDiv.textContent = `${index + 1}. ${label}`;
+                resultDiv.appendChild(titleDiv);
+
+                const scoreBarDiv = document.createElement('div');
+                scoreBarDiv.className = 'score-bar';
+                const scoreFillDiv = document.createElement('div');
+                scoreFillDiv.className = `score-fill score-${color}`;
+                scoreFillDiv.style.width = score + '%';
+                scoreFillDiv.textContent = score + '%';
+                scoreBarDiv.appendChild(scoreFillDiv);
+                resultDiv.appendChild(scoreBarDiv);
+
+                const alertDiv = document.createElement('div');
+                alertDiv.className = isLow ? 'alert-warning' : 'alert-success';
+                alertDiv.innerHTML = `
+                    <p class="font-semibold mb-2">${isLow ? '⚠️ Atenção' : '✅ Muito Bem'}</p>
+                    <p>${getExplanation(factor, score)}</p>
+                    ${isLow && score < 40 ? '<p class="mt-3 font-bold text-red-700">⛔ ALERTA: Recomendamos procurar um profissional (psicólogo ou coach) para desenvolver esta habilidade.</p>' : ''}
+                `;
+                resultDiv.appendChild(alertDiv);
+
+                resultsContent.appendChild(resultDiv);
+            });
+        }
+
+        function renderTotalExplanation(totalScore, factorScores) {
+            const totalExplanation = document.getElementById('total-explanation');
+            const hasVeryLow = Object.values(factorScores).some(score => score < 40);
+
+            let explanation = '';
+
+            if (totalScore >= 80) {
+                explanation = `
+                    <div class="alert-success">
+                        <p class="font-semibold mb-2">🌟 Excelente Desempenho!</p>
+                        <p>Você demonstra um nível muito elevado de autoconhecimento em habilidades sociais. Suas competências sociais estão bem desenvolvidas, permitindo que você tenha relacionamentos saudáveis e satisfatórios. Continue praticando e compartilhando essas habilidades com outros.</p>
+                    </div>
+                `;
+            } else if (totalScore >= 60) {
+                explanation = `
+                    <div class="alert-success">
+                        <p class="font-semibold mb-2">👍 Bom Desempenho</p>
+                        <p>Você possui um bom nível de habilidades sociais. Existem algumas áreas que podem ser melhoradas, mas no geral, você consegue se relacionar de forma saudável. Identifique os fatores com scores mais baixos e trabalhe em desenvolvê-los.</p>
+                    </div>
+                `;
+            } else if (totalScore >= 40) {
+                explanation = `
+                    <div class="alert-warning">
+                        <p class="font-semibold mb-2">⚠️ Desenvolvimento Necessário</p>
+                        <p>Seu nível de habilidades sociais está abaixo do esperado. Recomendamos que você trabalhe em desenvolver suas competências sociais. Procure recursos como livros, cursos ou terapia para melhorar suas habilidades de comunicação e relacionamento.</p>
+                    </div>
+                `;
+            } else {
+                explanation = `
+                    <div class="alert-danger">
+                        <p class="font-semibold mb-2">🚨 ALERTA CRÍTICO</p>
+                        <p>Seu nível de habilidades sociais está muito baixo. Isso pode estar afetando significativamente seus relacionamentos e bem-estar. <strong>Recomendamos fortemente que você procure um profissional qualificado (psicólogo, terapeuta ou coach) para ajudá-lo a desenvolver essas habilidades essenciais.</strong></p>
+                    </div>
+                `;
+            }
+
+            if (hasVeryLow) {
+                explanation += `
+                    <div class="alert-danger mt-4">
+                        <p class="font-semibold mb-2">⛔ ATENÇÃO ESPECIAL</p>
+                        <p>Você tem um ou mais fatores com scores muito baixos (abaixo de 40%). Isso indica uma dificuldade específica que merece atenção profissional. Não hesite em buscar ajuda de um psicólogo ou coach especializado.</p>
+                    </div>
+                `;
+            }
+
+            totalExplanation.innerHTML = explanation;
+        }
+
+        function generateAndSendPDF(factorScores, totalScore) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = 210;
+            let y = 10;
+            const name = userData.name;
+            const age = userData.age || 'Não informado';
+            const occupation = userData.occupation || 'Não informado';
+            const email = userData.email;
+
+            // PÁGINA 1
+            doc.setFontSize(18);
+            doc.text('Impulso Coaching', pageWidth / 2, y, { align: 'center' });
+            y += 8;
+            doc.setFontSize(14);
+            doc.text('Pesquisa de Autoconhecimento em Habilidades Sociais', pageWidth / 2, y, { align: 'center' });
+            y += 12;
+            doc.setFontSize(10);
+            doc.text(`Nome: ${name} | Idade: ${age} | Profissão: ${occupation} | E-mail: ${email}`, pageWidth / 2, y, { align: 'center', maxWidth: 180 });
+            y += 16;
+            doc.setFontSize(12);
+            doc.text('Por que entender suas habilidades sociais é importante?', pageWidth / 2, y, { align: 'center' });
+            y += 10;
+            doc.setFontSize(10);
+            const introText = "Reconhecer e desenvolver suas habilidades sociais é fundamental para construir relacionamentos saudáveis, comunicar-se efetivamente e alcançar sucesso pessoal e profissional. As habilidades sociais são competências essenciais que impactam diretamente na qualidade de vida, na satisfação relacional, na autoestima e no desempenho profissional. A autoavaliação consciente permite identificar suas forças e áreas de desenvolvimento, possibilitando crescimento contínuo e maior satisfação em todas as áreas da vida. Investir no desenvolvimento dessas habilidades é investir em sua própria felicidade, bem-estar e realização pessoal. Pessoas com habilidades sociais bem desenvolvidas conseguem estabelecer conexões mais profundas, resolver conflitos de forma construtiva, comunicar suas necessidades com clareza e criar ambientes de confiança e respeito. Este é o primeiro passo para uma transformação significativa em sua vida.";
+            doc.text(introText, 20, y, { maxWidth: 170, lineHeightFactor: 1.6 });
+            y += 32;
+            doc.setFontSize(9);
+            doc.text('A mudança pode acontecer em um instante', pageWidth / 2, 285, { align: 'center' });
+
+            // PÁGINA 2
+            doc.addPage();
+            y = 15;
+            doc.setFontSize(14);
+            doc.text('Resultados por Fator', pageWidth / 2, y, { align: 'center' });
+            y += 15;
+
+            const factors = [
+                { key: 'communication', label: 'COMUNICAÇÃO ASSERTIVA' },
+                { key: 'positive', label: 'EXPRESSÃO DE SENTIMENTO POSITIVO' },
+                { key: 'disagreement', label: 'EXPRESSÃO DE DESACORDO' },
+                { key: 'disinhibition', label: 'DESINIBIÇÃO/ESPONTANEIDADE' },
+                { key: 'aggression', label: 'CONTROLE DA AGRESSIVIDADE' }
+            ];
+
+            factors.forEach(factor => {
+                if (y > 250) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.setFontSize(11);
+                doc.text(`${factor.label}: ${factorScores[factor.key]}%`, 20, y);
+                const barWidth = (factorScores[factor.key] / 100) * 140;
+                const colorMap = {
+                    communication: [59, 130, 246],
+                    positive: [139, 92, 246],
+                    disagreement: [249, 115, 22],
+                    disinhibition: [167, 139, 250],
+                    aggression: [16, 185, 129]
+                };
+                const color = colorMap[factor.key] || [100, 100, 100];
+                doc.setFillColor(...color);
+                doc.rect(20, y + 3, barWidth, 6, 'F');
+                doc.setDrawColor(200, 200, 200);
+                doc.rect(20, y + 3, 140, 6);
+                y += 18;
+            });
+            doc.setFontSize(9);
+            doc.text('A mudança pode acontecer em um instante', pageWidth / 2, 285, { align: 'center' });
+
+            // PÁGINA 3
+            doc.addPage();
+            y = 20;
+            doc.setFontSize(16);
+            doc.text(`Score Total de Habilidades Sociais: ${totalScore}%`, pageWidth / 2, y, { align: 'center' });
+            y += 20;
+            doc.setFontSize(12);
+            doc.text('Sobre a Pesquisa de Habilidades Sociais', pageWidth / 2, y, { align: 'center' });
+            y += 12;
+            doc.setFontSize(10);
+            const items = [
+                '• Comunicação Assertiva: Capacidade de expressar pensamentos e sentimentos de forma clara e respeitosa.',
+                '• Expressão de Sentimento Positivo: Facilidade em demonstrar afeto, carinho e reconhecimento.',
+                '• Expressão de Desacordo: Habilidade de lidar com conflitos de forma construtiva.',
+                '• Desinibição/Espontaneidade: Facilidade em ser autêntico e participar de interações sociais.',
+                '• Controle da Agressividade: Capacidade de gerenciar raiva e frustração de forma saudável.'
+            ];
+            items.forEach(item => {
+                if (y > 260) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.text(item, 20, y, { maxWidth: 175 });
+                y += 8;
+            });
+            y += 12;
+            doc.setFontSize(11);
+            doc.text('Impulso Coaching', pageWidth - 20, y, { align: 'right' });
+            doc.setFontSize(9);
+            doc.text('impulsoflow@gmail.com', pageWidth - 20, y + 6, { align: 'right' });
+            doc.setFontSize(9);
+            doc.text('A mudança pode acontecer em um instante', pageWidth / 2, 285, { align: 'center' });
+
+            const pdfName = `resultado_habilidades_sociais_${name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')}.pdf`;
+            doc.save(pdfName);
+
+            // Capturar tela
+            html2canvas(document.getElementById('result-section')).then(canvas => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL();
+                link.download = `Resultado_Habilidades_Sociais_${name}_${new Date().toISOString().split('T')[0]}.png`;
+                link.click();
+            });
+
+            // Enviar email
+            const mailtoSubject = encodeURIComponent(`Resultado da Pesquisa de Habilidades Sociais - ${name}`);
+            const mailtoBody = encodeURIComponent(
+                `Nome: ${name}
+Idade: ${age}
+Profissão: ${occupation}
+E-mail: ${email}
+
+Resultados:
+Comunicação Assertiva: ${factorScores.communication}%
+Expressão de Sentimento Positivo: ${factorScores.positive}%
+Expressão de Desacordo: ${factorScores.disagreement}%
+Desinibição/Espontaneidade: ${factorScores.disinhibition}%
+Controle da Agressividade: ${factorScores.aggression}%
+
+Score Total de Habilidades Sociais: ${totalScore}%
+
+O PDF "${pdfName}" foi salvo. Por favor, anexe-o ao e-mail e envie.`
+            );
+            window.location.href = `mailto:impulsoflow@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`;
+            setTimeout(() => {
+                alert(`✅ Pesquisa finalizada!\n📄 O PDF foi salvo.\n📸 A tela foi capturada.\n✉️ Um e-mail foi aberto — basta anexar os arquivos e enviar!`);
+            }, 500);
+        }
+
+        function resetTest() {
+            currentQuestion = 0;
+            Object.keys(responses).forEach(key => delete responses[key]);
+            userData = {};
+            document.getElementById('form-section').classList.remove('hidden');
+            document.getElementById('result-section').classList.add('hidden');
+            document.getElementById('name').value = '';
+            document.getElementById('age').value = '';
+            document.getElementById('occupation').value = '';
+            document.getElementById('email').value = '';
+        }
+    </script>
+</body>
+</html>
